@@ -1,7 +1,8 @@
 import 'package:e_com_admin/general/widgets/admin_header.dart';
-import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+
+// category model and local store not required for flat view
 
 class CategoryProductsScreen extends StatefulWidget {
   final String categoryId;
@@ -43,26 +44,49 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Subcategory Management / ${widget.categoryName}",
+                        "Products / ${widget.categoryName}",
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1C77FF),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1C77FF),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text("Back"),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          const Gap(12),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              '/products/productAdd',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2196F3),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('Add Product'),
                           ),
-                        ),
-                        child: const Text("Back"),
+                        ],
                       ),
                     ],
                   ),
@@ -90,23 +114,27 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                       ),
                     ),
                   ),
-                  const Gap(32),
+                  const Gap(24),
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 5,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.9,
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Products for "${widget.categoryName}" will appear here when added.',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 16),
                           ),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return _SubcategoryCardLayout(
-                          title: "Subcategory ${index + 1}",
-                          imageUrl: "https://via.placeholder.com/150",
-                        );
-                      },
+                          const Gap(16),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pushNamed(
+                              context,
+                              '/products/productAdd',
+                            ),
+                            child: const Text('Add Product'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -117,58 +145,8 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       ),
     );
   }
+
+  // Subcategory creation removed to keep a flat category model per requested flow.
 }
 
-class _SubcategoryCardLayout extends StatelessWidget {
-  final String title;
-  final String imageUrl;
-
-  const _SubcategoryCardLayout({required this.title, required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        // Navigate to next category level if needed.
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Center(
-                  child: CustomCachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              const Gap(12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Subcategory card removed — flat category flow implemented.

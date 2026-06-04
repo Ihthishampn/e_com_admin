@@ -2,6 +2,15 @@ import 'package:e_com_admin/general/widgets/admin_header.dart';
 import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:typed_data';
+
+import 'package:gap/gap.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../data/model/category_model.dart';
+import '../../data/repository/local_category_store.dart';
+import '../../../../general/services/image_service.dart';
 
 class CategoryScreen extends StatelessWidget {
   const CategoryScreen({super.key});
@@ -30,7 +39,7 @@ class CategoryScreen extends StatelessWidget {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: () => _showAddCategoryDialogMock(context),
+                        onPressed: () => _showAddCategoryDialog(context, null),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2196F3),
                           foregroundColor: Colors.white,
@@ -48,20 +57,30 @@ class CategoryScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 6,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.8,
-                          ),
-                      itemCount: 8,
-                      itemBuilder: (context, index) {
-                        return _CategoryCardLayout(
-                          categoryId: 'category_${index + 1}',
-                          title: "Category ${index + 1}",
-                          imageUrl: "https://via.placeholder.com/150",
+                    child: ValueListenableBuilder<List<CategoryModel>>(
+                      valueListenable:
+                          LocalCategoryStore.instance.categoriesNotifier,
+                      builder: (context, categories, _) {
+                        return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 6,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.8,
+                              ),
+                          itemCount: categories.length,
+                          itemBuilder: (context, index) {
+                            final c = categories[index];
+                            return _CategoryCardLayout(
+                              categoryId: c.id ?? 'cat_$index',
+                              title: c.name,
+                              imageUrl: c.imageUrl.isNotEmpty
+                                  ? c.imageUrl
+                                  : 'https://via.placeholder.com/150',
+                              imageBytes: c.imageBytes,
+                            );
+                          },
                         );
                       },
                     ),
@@ -75,8 +94,68 @@ class CategoryScreen extends StatelessWidget {
     );
   }
 
-  void _showAddCategoryDialogMock(BuildContext context) {
-    // Handled by dynamic implementation later
+  void _showAddCategoryDialog(BuildContext context, String? parentId) {
+    final nameController = TextEditingController();
+    Uint8List? pickedBytes;
+    final imageService = ImageServices(FirebaseStorage.instance, ImagePicker());
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          return AlertDialog(
+            title: Text(parentId == null ? 'Add Category' : 'Add Subcategory'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+                const Gap(8),
+                if (pickedBytes != null)
+                  SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Image.memory(pickedBytes!, fit: BoxFit.cover),
+                  ),
+                const Gap(8),
+                ElevatedButton(
+                  onPressed: () async {
+                    final res = await imageService.pickImageFromDevice();
+                    res.fold((l) => null, (bytes) {
+                      setState(() => pickedBytes = bytes);
+                    });
+                  },
+                  child: const Text('Select Image'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final name = nameController.text.trim();
+                  if (name.isNotEmpty) {
+                    LocalCategoryStore.instance.addCategory(
+                      name: name,
+                      parentId: parentId,
+                      imageUrl: '',
+                      imageBytes: pickedBytes,
+                    );
+                  }
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -84,11 +163,13 @@ class _CategoryCardLayout extends StatelessWidget {
   final String categoryId;
   final String title;
   final String imageUrl;
+  final Uint8List? imageBytes;
 
   const _CategoryCardLayout({
     required this.categoryId,
     required this.title,
     required this.imageUrl,
+    this.imageBytes,
   });
 
   @override
@@ -112,10 +193,12 @@ class _CategoryCardLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: CustomCachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.contain,
-                    ),
+                    child: imageBytes != null
+                        ? Image.memory(imageBytes!, fit: BoxFit.contain)
+                        : CustomCachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.contain,
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Text(

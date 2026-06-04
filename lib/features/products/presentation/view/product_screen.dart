@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:e_com_admin/general/widgets/admin_header.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import '../../data/model/product_model.dart';
+import '../../data/repository/local_product_store.dart';
+import '../../../categories/data/repository/local_category_store.dart';
 
 class ProductScreen extends StatelessWidget {
   const ProductScreen({super.key});
@@ -76,17 +81,26 @@ class ProductScreen extends StatelessWidget {
 
                   // Product Grid UI only
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 5,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.7,
-                          ),
-                      itemCount: 10,
-                      itemBuilder: (context, index) {
-                        return const _ProductCard();
+                    child: ValueListenableBuilder<List<ProductModel>>(
+                      valueListenable: LocalProductStore.instance.products,
+                      builder: (context, products, _) {
+                        if (products.isEmpty) {
+                          return const Center(child: Text('No products added'));
+                        }
+                        return GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 5,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.7,
+                              ),
+                          itemCount: products.length,
+                          itemBuilder: (context, index) {
+                            final p = products[index];
+                            return _ProductCard(product: p);
+                          },
+                        );
                       },
                     ),
                   ),
@@ -145,23 +159,123 @@ class _Chip extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard();
+  final ProductModel product;
+
+  const _ProductCard({required this.product});
+
+  Widget _buildImage() {
+    if (product.images.isNotEmpty) {
+      final first = product.images.first;
+      if (first.startsWith('data:')) {
+        try {
+          final data = base64Decode(first.split(',').last);
+          return Image.memory(data, fit: BoxFit.cover);
+        } catch (_) {}
+      } else {
+        return Image.network(first, fit: BoxFit.cover);
+      }
+    }
+    return const Icon(Icons.image, size: 64, color: Colors.grey);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final matches = LocalCategoryStore.instance.categories
+        .where((c) => c.id == product.categoryId)
+        .toList();
+    final category = matches.isNotEmpty ? matches.first : null;
+
     return GestureDetector(
-      onTap: () {
-        // Navigate to product details
-        // You can update this when you have actual product data
-        // context.go('/products/productDetails');
-      },
+      onTap: () => context.go('/products/productDetails', extra: product),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: const Center(child: Text("Product")),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image area
+            Container(
+              height: 120,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.shade100,
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: _buildImage(),
+            ),
+            const Gap(8),
+            Text(
+              product.productName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Gap(4),
+            Text(
+              product.shortNote,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const Gap(6),
+            Text(
+              'Category: ${category?.name ?? '—'}',
+              style: const TextStyle(fontSize: 12),
+            ),
+            const Gap(6),
+            Row(
+              children: [
+                if (product.isHot)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'HOT',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                Text(
+                  'Variants: ${product.variants.length}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            const Gap(8),
+            // Rating (single double value)
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 16),
+                const Gap(6),
+                Text(
+                  product.rating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                // small note or placeholder for future
+                const SizedBox.shrink(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

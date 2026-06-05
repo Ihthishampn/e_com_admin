@@ -24,7 +24,7 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
           // Sidebar
           Container(
             width: 250,
-            color: Colors.white,
+            color: Theme.of(context).primaryColor,
             child: Column(
               children: [
                 // Logo
@@ -102,7 +102,8 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF33221E) : Colors.transparent,
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
@@ -110,7 +111,7 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
+                  color: isSelected ? Colors.black : Colors.white,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 14,
                 ),

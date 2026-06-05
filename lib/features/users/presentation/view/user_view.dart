@@ -1,3 +1,4 @@
+import 'package:e_com_admin/features/users/presentation/widgets/widgets_of_user_view.dart/user_list_tile.dart';
 import 'package:e_com_admin/general/widgets/admin_header.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -72,7 +73,7 @@ class _UsersViewState extends State<UsersView> {
                 separatorBuilder: (_, __) =>
                     Divider(color: Colors.grey.shade200),
                 itemBuilder: (context, index) {
-                  return _UserListTile(
+                  return UserListTile(
                     userId: 'user_${index + 1}',
                     onTap: () {
                       context.go('/users/userDetails?userId=user_${index + 1}');
@@ -88,78 +89,4 @@ class _UsersViewState extends State<UsersView> {
   }
 }
 
-class _UserListTile extends StatelessWidget {
-  final String userId;
-  final VoidCallback onTap;
 
-  const _UserListTile({required this.userId, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'ID: $userId',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-
-            const Gap(10),
-
-            Row(
-              children: [
-                const CircleAvatar(radius: 24, child: Text('A')),
-
-                const Gap(16),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _InfoRow(label: 'Name', value: 'John Doe'),
-                      const Gap(4),
-                      const _InfoRow(
-                        label: 'Phone Number',
-                        value: '+91 0000000000',
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Icon(Icons.chevron_right, color: Colors.grey),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 110,
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ),
-        const Text(': '),
-        Expanded(child: Text(value, overflow: TextOverflow.ellipsis)),
-      ],
-    );
-  }
-}

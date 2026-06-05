@@ -1,15 +1,18 @@
 import 'dart:typed_data';
-import 'dart:convert';
-import 'package:e_com_admin/general/widgets/add_image_containers.dart';
 import 'package:e_com_admin/general/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:e_com_admin/features/categories/data/repository/local_category_store.dart';
 import 'package:e_com_admin/features/products/data/model/product_model.dart';
-import 'package:e_com_admin/features/products/data/repository/local_product_store.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
-import '../../../../general/services/image_service.dart';
+import 'package:e_com_admin/features/categories/data/model/category_model.dart';
+import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'package:e_com_admin/features/products/presentation/provider/product_provider.dart';
+import 'package:e_com_admin/general/services/search_keyword_builder.dart';
+import 'package:toastification/toastification.dart';
+import 'package:provider/provider.dart';
+import '../widgets/widgets_of_add_prodcuts/image_picker_layout.dart';
+import '../widgets/widgets_of_add_prodcuts/category_dropdown_layout.dart';
+import '../widgets/widgets_of_add_prodcuts/variant_section_layout.dart';
+import '../widgets/widgets_of_add_prodcuts/details_section_layout.dart';
 
 class AddProductScreen extends StatefulWidget {
   final bool isEditing;
@@ -33,9 +36,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
   List<String> existingImageUrls = [];
   List<Uint8List> selectedImages = [];
   String? selectedCategoryId;
-
   int variantCount = 1;
   int detailCount = 1;
+  List<ProductVariant> variants = [];
+  List<ProductDetail> details = [];
   bool isHot = false;
   double rating = 1.0;
 
@@ -83,7 +87,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
             ),
             const Gap(12),
-            _buildImagePickerLayout(),
+            ImagePickerLayout(
+              selectedImages: selectedImages,
+              onImagesSelected: (newImages) =>
+                  setState(() => selectedImages = newImages),
+              onImageRemoved: (bytes) =>
+                  setState(() => selectedImages.remove(bytes)),
+            ),
             const Gap(32),
 
             CustomTextField(
@@ -100,13 +110,39 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
             const Gap(16),
 
-            _buildCategoryDropdownLayout(),
+            StreamBuilder<List<CategoryModel>>(
+              stream: context.read<CategoryProvider>().handleCategoryFetch(),
+              builder: (context, snapshot) {
+                final categoryItems = snapshot.data
+                        ?.map((category) => DropdownMenuItem<String>(
+                              value: category.id,
+                              child: Text(category.name),
+                            ))
+                        .toList() ??
+                    [];
+
+                return CategoryDropdownLayout(
+                  selectedCategoryId: selectedCategoryId,
+                  onChanged: (val) => setState(() => selectedCategoryId = val),
+                  items: categoryItems,
+                );
+              },
+            ),
             const Gap(32),
 
-            _buildVariantSectionLayout(),
+            VariantSectionLayout(
+              variantCount: variantCount,
+              onVariantRemoved: (index) => setState(() => variantCount--),
+              onChanged: (list) => variants = list,
+            ),
             const Gap(32),
 
-            _buildDetailsSectionLayout(),
+            DetailsSectionLayout(
+              detailCount: detailCount,
+              onAddDetail: () => setState(() => detailCount++),
+              onDetailRemoved: (index) => setState(() => detailCount--),
+              onChanged: (list) => details = list,
+            ),
             const Gap(32),
 
             CustomTextField(
@@ -164,9 +200,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       child: DropdownButton<double>(
                         value: rating,
                         items: () {
-                          final intPart = rating.floor() >= 1
-                              ? rating.floor()
-                              : 1;
+                          final intPart =
+                              rating.floor() >= 1 ? rating.floor() : 1;
                           final decimals = [0.0, 0.2, 0.4, 0.6, 0.8];
                           final values = <double>[];
                           for (var d in decimals) {
@@ -206,29 +241,110 @@ class _AddProductScreenState extends State<AddProductScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  // Create a ProductModel from entered fields and add to local store
-                  final imagesDataUrls = selectedImages
-                      .map((b) => 'data:image/png;base64,${base64Encode(b)}')
-                      .toList();
+                onPressed: () async {
+                  final productName = nameController.text.trim();
+                  final shortNote = shortNoteController.text.trim();
+                  final categoryId = selectedCategoryId;
+
+                  if (productName.isEmpty) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description: const Text('Product name is required'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
+
+                  if (shortNote.isEmpty) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description: const Text('Short note is required'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
+
+                  if (categoryId == null || categoryId.isEmpty) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description: const Text('Please select a category'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
+
+                  if (selectedImages.isEmpty) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description:
+                          const Text('Please select at least one image'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
+
+                  // validate variants/details collected from the child widgets
+                  bool _areVariantsValid(List variants) {
+                    if (variants.isEmpty) return false;
+                    for (var i = 0; i < variants.length; i++) {
+                      final v = variants[i];
+                      if (v.unit.trim().isEmpty || v.variant.trim().isEmpty)
+                        return false;
+                      if (v.sellingPrice <= 0 || v.mrp <= 0) return false;
+                    }
+                    return true;
+                  }
+
+                  bool _areDetailsValid(List details) {
+                    if (details.isEmpty) return false;
+                    for (var i = 0; i < details.length; i++) {
+                      final d = details[i];
+                      if (d.heading.trim().isEmpty || d.content.trim().isEmpty)
+                        return false;
+                    }
+                    return true;
+                  }
+
+                  if (!_areVariantsValid(variants)) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description: const Text(
+                          'Please provide valid variant entries (unit, variant, MRP and selling price).'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
+
+                  if (!_areDetailsValid(details)) {
+                    toastification.show(
+                      title: const Text('Validation'),
+                      description: const Text(
+                          'Please provide valid detail entries (heading and description).'),
+                      backgroundColor: Colors.orange,
+                    );
+                    return;
+                  }
 
                   final product = ProductModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    productName: nameController.text.trim(),
-                    shortNote: shortNoteController.text.trim(),
-                    categoryId: selectedCategoryId ?? '',
-                    images: imagesDataUrls,
-                    variants: [],
-                    details: [],
+                    productName: productName,
+                    shortNote: shortNote,
+                    categoryId: categoryId,
+                    variants: variants,
+                    details: details,
                     additionalNote: additionalNoteController.text.trim(),
-                    createdAt: DateTime.now(),
-                
                     rating: rating,
                     isHot: isHot,
+                    searchKeywords: keywordsBuilder(productName),
                   );
 
-                  LocalProductStore.instance.addProduct(product);
-                  Navigator.pop(context);
+                  final provider = context.read<ProductProvider>();
+                  final success = await provider.handleAddProductWithImages(
+                    product: product,
+                    imageBytes: selectedImages,
+                  );
+                  if (success) {
+                    Navigator.pop(context);
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -248,257 +364,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildImagePickerLayout() {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        GestureDetector(
-          onTap: () async {
-            final imageService = ImageServices(
-              FirebaseStorage.instance,
-              ImagePicker(),
-            );
-            final res = await imageService.pickMultipleImageFromDevice(
-              maxImages: 5,
-            );
-            res.fold((l) => null, (list) {
-              setState(() {
-                selectedImages = [...selectedImages, ...list];
-              });
-            });
-          },
-          child: SizedBox(
-            width: 120,
-            height: 120,
-            child: AddImageContainer(
-              width: 120,
-              height: 120,
-              aspectRatioValue: 1.0,
-              aspectRatio: "1:1",
-            ),
-          ),
-        ),
-        for (var bytes in selectedImages)
-          Stack(
-            children: [
-              Image.memory(bytes, width: 120, height: 120, fit: BoxFit.cover),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: InkWell(
-                  onTap: () => setState(() => selectedImages.remove(bytes)),
-                  child: Container(
-                    color: Colors.black45,
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryDropdownLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Category", style: TextStyle(fontWeight: FontWeight.bold)),
-        const Gap(8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: selectedCategoryId,
-              hint: const Text("Select Category"),
-              items: LocalCategoryStore.instance.categories
-                  .map(
-                    (c) => DropdownMenuItem<String>(
-                      value: c.id,
-                      child: Text(
-                        c.name + (c.parentId == null ? ' (Main)' : ''),
-                      ),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (val) => setState(() => selectedCategoryId = val),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVariantSectionLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Variant Details",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const Gap(16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: variantCount,
-          itemBuilder: (context, index) => _buildVariantItemLayout(index),
-        ),
-        const Gap(16),
-      ],
-    );
-  }
-
-  Widget _buildVariantItemLayout(int idx) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Variant ${idx + 1}",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              if (variantCount > 1)
-                IconButton(
-                  onPressed: () => setState(() => variantCount--),
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                ),
-            ],
-          ),
-          const Gap(12),
-          const Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: "MRP",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              Gap(12),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: "Selling Price",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              Gap(12),
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: "Stock Qty",
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailsSectionLayout() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Product Details",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const Gap(16),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: detailCount,
-          itemBuilder: (context, index) => _buildDetailItemLayout(index),
-        ),
-        const Gap(16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: () => setState(() => detailCount++),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2196F3),
-            ),
-            child: const Text("Add Another Details"),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailItemLayout(int idx) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Detail ${idx + 1}",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              if (detailCount > 1)
-                IconButton(
-                  onPressed: () => setState(() => detailCount--),
-                  icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                ),
-            ],
-          ),
-          const Gap(12),
-          const TextField(
-            decoration: InputDecoration(
-              labelText: "Heading",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const Gap(12),
-          const TextField(
-            decoration: InputDecoration(
-              labelText: "Description",
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 3,
-          ),
-        ],
       ),
     );
   }

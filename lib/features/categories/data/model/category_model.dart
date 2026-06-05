@@ -1,82 +1,68 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CategoryModel {
   final String? id;
   final String name;
-  final String? parentId;
   final String imageUrl;
-  final Uint8List? imageBytes;
-  final int order;
-  final bool isActive;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final DateTime createdAt;
+  final List<String> searchKeywords;
 
   CategoryModel({
-    this.id,
+    required this.id,
     required this.name,
-    this.parentId,
-    this.imageUrl = '',
-    this.imageBytes,
-    this.order = 0,
-    this.isActive = true,
-    this.createdAt,
-    this.updatedAt,
+    required this.imageUrl,
+    required this.createdAt,
+    this.searchKeywords = const [],
   });
 
-  factory CategoryModel.fromMap(Map<String, dynamic> map, String id) {
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "name": name,
+      "imageUrl": imageUrl,
+      "createdAt": createdAt.toIso8601String(),
+      "searchKeywords": searchKeywords,
+    };
+  }
+
+  factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    final createdAtValue = json["createdAt"];
+    DateTime createdAt;
+    if (createdAtValue is String) {
+      createdAt = DateTime.parse(createdAtValue);
+    } else if (createdAtValue is Timestamp) {
+      createdAt = createdAtValue.toDate();
+    } else {
+      createdAt = DateTime.now();
+    }
+
+    final rawKeywords = json["searchKeywords"];
+    final searchKeywords = rawKeywords is List
+        ? rawKeywords.map((e) => e.toString()).toList()
+        : <String>[];
+
     return CategoryModel(
-      id: id,
-      name: map['name'] ?? '',
-      parentId: map['parentId'],
-      imageUrl: map['imageUrl'] ?? '',
-      imageBytes: null,
-      order: (map['order'] ?? 0).toInt(),
-      isActive: map['isActive'] ?? true,
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
+      id: json["id"],
+      name: json["name"],
+      imageUrl: json["imageUrl"],
+      createdAt: createdAt,
+      searchKeywords: searchKeywords,
     );
   }
 
   CategoryModel copyWith({
     String? id,
     String? name,
-    String? parentId,
     String? imageUrl,
-    Uint8List? imageBytes,
-    int? order,
-    bool? isActive,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    List<String>? searchKeywords,
   }) {
     return CategoryModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      parentId: parentId ?? this.parentId,
       imageUrl: imageUrl ?? this.imageUrl,
-      imageBytes: imageBytes ?? this.imageBytes,
-      order: order ?? this.order,
-      isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      searchKeywords: searchKeywords ?? this.searchKeywords,
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'name': name,
-      'parentId': parentId,
-      'imageUrl': imageUrl,
-      'order': order,
-      'isActive': isActive,
-      'createdAt': createdAt != null
-          ? Timestamp.fromDate(createdAt!)
-          : FieldValue.serverTimestamp(),
-      'updatedAt': updatedAt != null
-          ? Timestamp.fromDate(updatedAt!)
-          : FieldValue.serverTimestamp(),
-    };
   }
 }

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import '../widgets/widgets_of_user_detail/user_info_card.dart';
+import '../widgets/widgets_of_user_detail/stat_card.dart';
+import '../widgets/widgets_of_user_detail/tab_button_selector.dart';
+import '../widgets/widgets_of_user_detail/orders_table.dart';
+import '../widgets/widgets_of_user_detail/returns_table.dart';
 
 class UserDetailsScreen extends StatefulWidget {
   final String userId;
@@ -27,7 +32,12 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   ];
 
   final List<List<String>> _mockReturns = [
-    ['29/05/2026', 'ORD-2026-9110', 'Item defective or crushed packaging', 'RETURNED'],
+    [
+      '29/05/2026',
+      'ORD-2026-9110',
+      'Item defective or crushed packaging',
+      'RETURNED'
+    ],
   ];
 
   @override
@@ -37,19 +47,20 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       body: Column(
         children: [
           Container(
-  height: 70,
-  width: double.infinity,
-  decoration: BoxDecoration(
-    color: Colors.white,
-    border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-  ),
-  child: const Center(
-    child: Text(
-      'Admin Header Placeholder',
-      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-    ),
-  ),
-),
+            height: 70,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: const Center(
+              child: Text(
+                'Admin Header Placeholder',
+                style:
+                    TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -81,7 +92,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey.shade200),
@@ -101,10 +113,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0061D1),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
               ),
-              child: const Text('Back', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Back',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -128,221 +143,52 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ID: ${_mockUser['id']}',
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
-              const Gap(16),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: const Color(0xFF2D2D2D),
-                    child: Text(_mockUser['initial']!,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                  const Gap(20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _userField('Name', _mockUser['displayName']!),
-                      const Gap(8),
-                      _userField('Phone Number', _mockUser['phoneNumber']!),
-                    ],
-                  ),
-                ],
+              UserInfoCard(
+                userId: _mockUser['id']!,
+                initial: _mockUser['initial']!,
+                displayName: _mockUser['displayName']!,
+                phoneNumber: _mockUser['phoneNumber']!,
               ),
               const Gap(32),
 
               // Overview Status Stats
               Row(
                 children: [
-                  _statCard('Total Orders', '3', const Color(0xFFCDE4FF)),
+                  StatCard(
+                      label: 'Total Orders',
+                      value: '3',
+                      color: const Color(0xFFCDE4FF)),
                   const Gap(16),
-                  _statCard('Total Amount', '₹2,590.00', const Color(0xFFE6D5FF)),
+                  StatCard(
+                      label: 'Total Amount',
+                      value: '₹2,590.00',
+                      color: const Color(0xFFE6D5FF)),
                   const Gap(16),
-                  _statCard('Return Ratio', '33.3%', const Color(0xFFD9D9D9)),
+                  StatCard(
+                      label: 'Return Ratio',
+                      value: '33.3%',
+                      color: const Color(0xFFD9D9D9)),
                 ],
               ),
               const Gap(32),
 
               // Interactive Tab Layout
-              Row(
-                children: [
-                  _tabButton('Orders', 0),
-                  const Gap(8),
-                  _tabButton('Refund & Return', 1),
-                ],
+              TabButtonSelector(
+                selectedTabIndex: _selectedTabIndex,
+                onTabChanged: (index) =>
+                    setState(() => _selectedTabIndex = index),
               ),
               const Gap(24),
 
               // Contextual list viewing toggle
               _selectedTabIndex == 0
-                  ? _buildOrdersTable()
-                  : _buildReturnsTable(),
+                  ? OrdersTable(mockOrders: _mockOrders)
+                  : ReturnsTable(mockReturns: _mockReturns),
             ],
           ),
         ),
         const Gap(40),
       ],
-    );
-  }
-
-  Widget _userField(String label, String value) {
-    return Row(
-      children: [
-        SizedBox(
-            width: 120,
-            child: Text(label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-        const Text(':  ', style: TextStyle(fontSize: 14)),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-
-  Widget _statCard(String label, String value, Color color) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-          const Gap(4),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _tabButton(String label, int index) {
-    bool isSelected = _selectedTabIndex == index;
-    return InkWell(
-      onTap: () => setState(() => _selectedTabIndex = index),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF007BFF) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isSelected ? Colors.transparent : Colors.grey.shade300),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey.shade600,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrdersTable() {
-    return Column(
-      children: [
-        _tableHeader([
-          'Date',
-          'Order Number',
-          'No. Of Products',
-          'Pay. Method',
-          'Amount',
-          'Status'
-        ]),
-        ..._mockOrders.map((order) => _tableRow(order)),
-        _tableTotalRow('2,590.00'),
-      ],
-    );
-  }
-
-  Widget _buildReturnsTable() {
-    return Column(
-      children: [
-        _tableHeader(['Date', 'Order Number', 'Reason', 'Status']),
-        if (_mockReturns.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Text('No return records found'),
-          )
-        else
-          ..._mockReturns.map((ret) => _tableRow(ret)),
-      ],
-    );
-  }
-
-  Widget _tableHeader(List<String> titles) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFE0E0E0),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: Row(
-        children: titles
-            .map((t) => Expanded(
-                child: Text(t,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Colors.black54))))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _tableRow(List<String> values) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      child: Row(
-        children: values.asMap().entries.map((entry) {
-          int idx = entry.key;
-          String val = entry.value;
-          Color textColor = Colors.black87;
-
-          // Check for tailing status highlights
-          if (idx == values.length - 1) {
-            if (val == 'COMPLETED' || val == 'DELIVERED' || val == 'RETURNED') {
-              textColor = Colors.green;
-            }
-            if (val == 'CANCELLED' || val == 'REJECTED') {
-              textColor = Colors.red;
-            }
-          }
-          return Expanded(
-            child: Text(
-              val,
-              style: TextStyle(
-                fontSize: 13,
-                color: textColor,
-                fontWeight: idx == values.length - 1 ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _tableTotalRow(String total) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      color: const Color(0xFFF1F2F2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          const Text('Total: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          Text('₹$total', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
     );
   }
 }

@@ -1,0 +1,157 @@
+import 'dart:convert';
+import 'package:e_com_admin/features/products/data/model/product_model.dart';
+import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'package:e_com_admin/features/categories/data/model/category_model.dart';
+
+class ProductCard extends StatelessWidget {
+  final ProductModel product;
+
+  const ProductCard({
+    Key? key,
+    required this.product,
+  }) : super(key: key);
+
+  Widget _buildImage() {
+    if (product.images.isNotEmpty) {
+      final first = product.images.first;
+      if (first.startsWith('data:')) {
+        try {
+          final data = base64Decode(first.split(',').last);
+          return Image.memory(data, fit: BoxFit.cover);
+        } catch (_) {}
+      } else {
+        return Image.network(first, fit: BoxFit.cover);
+      }
+    }
+    return const Icon(Icons.image, size: 64, color: Colors.grey);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/products/productDetails', extra: product),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image area
+            Container(
+              height: 120,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.shade100,
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: _buildImage(),
+            ),
+            const Gap(8),
+            Text(
+              product.productName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const Gap(4),
+            Text(
+              product.shortNote,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const Gap(6),
+            const Text('Category: ', style: TextStyle(fontSize: 12)),
+            const Gap(6),
+            if (product.categoryId.isEmpty) ...[
+              const Text('Not assigned',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ] else ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: StreamBuilder<List<CategoryModel>>(
+                  stream:
+                      context.read<CategoryProvider>().handleCategoryFetch(),
+                  builder: (context, snap) {
+                    final cats = snap.data ?? [];
+                    final cat = cats.firstWhere(
+                      (c) => c.id == product.categoryId,
+                      orElse: () => CategoryModel(
+                          id: '',
+                          name: '',
+                          imageUrl: '',
+                          createdAt: DateTime.now()),
+                    );
+                    final name =
+                        (cat.name.isNotEmpty) ? cat.name : 'Uncategorized';
+                    return Text(name,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis);
+                  },
+                ),
+              ),
+            ],
+            const Gap(6),
+            Row(
+              children: [
+                if (product.isHot)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'HOT',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                Text(
+                  'Variants: ${product.variants.length}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            const Gap(8),
+            // Rating (single double value)
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 16),
+                const Gap(6),
+                Text(
+                  product.rating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                // small note or placeholder for future
+                const SizedBox.shrink(),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

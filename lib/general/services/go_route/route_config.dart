@@ -12,8 +12,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../features/sidebar/presentation/view/side_navigation_bar.dart';
 
-
-
 final GlobalKey<NavigatorState> rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
 
@@ -29,7 +27,6 @@ class RouteConfig {
         path: '/',
         redirect: (_, __) => '/users',
       ),
-
       ShellRoute(
         navigatorKey: shellNavigatorKey,
         builder: (context, state, child) {
@@ -45,8 +42,7 @@ class RouteConfig {
               GoRoute(
                 path: 'userDetails',
                 pageBuilder: (context, state) {
-                  final userId =
-                      state.uri.queryParameters['userId'] ?? '';
+                  final userId = state.uri.queryParameters['userId'] ?? '';
 
                   return _customPage(
                     state,
@@ -84,11 +80,38 @@ class RouteConfig {
               GoRoute(
                 path: 'productDetails',
                 pageBuilder: (context, state) {
-                  final product = state.extra as ProductModel;
+                  final extra = state.extra;
+                  if (extra is ProductModel) {
+                    return _customPage(
+                      state,
+                      ProductDetailsScreen(product: extra),
+                    );
+                  }
 
+                  // If navigation didn't provide a ProductModel (e.g. deep link),
+                  // show a simple fallback page instead of throwing a runtime type error.
                   return _customPage(
                     state,
-                    ProductDetailsScreen(product: product),
+                    Scaffold(
+                      appBar: AppBar(title: const Text('Product Details')),
+                      body: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.error_outline,
+                                size: 56, color: Colors.red),
+                            const SizedBox(height: 12),
+                            const Text('No product data provided',
+                                style: TextStyle(fontSize: 16)),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () => context.go('/products'),
+                              child: const Text('Back to Products'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
@@ -103,7 +126,7 @@ class RouteConfig {
           ),
 
           /// CATEGORIES
-          GoRoute(  
+          GoRoute(
             path: '/categories',
             pageBuilder: (context, state) =>
                 _customPage(state, const CategoryScreen()),
@@ -111,17 +134,18 @@ class RouteConfig {
               GoRoute(
                 path: 'products',
                 pageBuilder: (context, state) {
-                  final categoryId =
-                      state.uri.queryParameters['id'] ?? '';
+                  final categoryId = state.uri.queryParameters['id'] ?? '';
 
-                  final categoryName =
-                      state.uri.queryParameters['name'] ?? '';
+                  final categoryName = state.uri.queryParameters['name'] ?? '';
+                  final categoryImage =
+                      state.uri.queryParameters['image'] ?? '';
 
                   return _customPage(
                     state,
                     CategoryProductsScreen(
                       categoryId: categoryId,
                       categoryName: categoryName,
+                      categoryImage: categoryImage,
                     ),
                   );
                 },
@@ -169,8 +193,7 @@ class RouteConfig {
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,
-      transitionsBuilder:
-          (context, animation, secondaryAnimation, child) {
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(-1, 0);
         const end = Offset.zero;
 

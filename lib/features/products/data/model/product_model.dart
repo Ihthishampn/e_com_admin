@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductModel {
-  final String? id;   
+  final String? id;
   final String productName;
   final String shortNote;
   final String categoryId;
@@ -11,6 +11,7 @@ class ProductModel {
   final String additionalNote;
   final double rating;
   final bool isHot;
+  final List<String> searchKeywords;
   final DateTime? createdAt;
 
   ProductModel({
@@ -25,6 +26,7 @@ class ProductModel {
     this.rating = 0.0,
     this.isHot = false,
     this.createdAt,
+    this.searchKeywords = const [],
   });
 
   factory ProductModel.fromMap(Map<String, dynamic> map, String id) {
@@ -44,23 +46,24 @@ class ProductModel {
       rating: (map['rating'] ?? 0).toDouble(),
       isHot: map['isHot'] ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      searchKeywords: List<String>.from(map['searchKeywords'] ?? []),
     );
   }
 
-  ProductModel copyWith({
-    String? id,
-    String? productName,
-    String? shortNote,
-    String? categoryId,
-    List<String>? images,
-    List<ProductVariant>? variants,
-    List<ProductDetail>? details,
-    String? additionalNote,
-    double? rating,
-    bool? isHot,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
+  ProductModel copyWith(
+      {String? id,
+      String? productName,
+      String? shortNote,
+      String? categoryId,
+      List<String>? images,
+      List<ProductVariant>? variants,
+      List<ProductDetail>? details,
+      String? additionalNote,
+      double? rating,
+      bool? isHot,
+      DateTime? createdAt,
+      DateTime? updatedAt,
+      List<String>? searchKeywords}) {
     return ProductModel(
       id: id ?? this.id,
       productName: productName ?? this.productName,
@@ -73,6 +76,7 @@ class ProductModel {
       rating: rating ?? this.rating,
       isHot: isHot ?? this.isHot,
       createdAt: createdAt ?? this.createdAt,
+      searchKeywords: searchKeywords ?? this.searchKeywords,
     );
   }
 
@@ -88,10 +92,10 @@ class ProductModel {
       'additionalNote': additionalNote,
       'rating': rating,
       'isHot': isHot,
+      "searchKeywords": searchKeywords,
       'createdAt': createdAt != null
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),
-     
     };
   }
 }

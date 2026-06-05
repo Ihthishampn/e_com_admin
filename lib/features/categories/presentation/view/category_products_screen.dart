@@ -7,11 +7,13 @@ import 'package:gap/gap.dart';
 class CategoryProductsScreen extends StatefulWidget {
   final String categoryId;
   final String categoryName;
+  final String categoryImage;
 
   const CategoryProductsScreen({
     super.key,
     required this.categoryId,
     required this.categoryName,
+    required this.categoryImage,
   });
 
   @override
@@ -50,43 +52,20 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Row(
-                        children: [
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1C77FF),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text("Back"),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1C77FF),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
                           ),
-                          const Gap(12),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pushNamed(
-                              context,
-                              '/products/productAdd',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2196F3),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text('Add Product'),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
+                        ),
+                        child: const Text("Back"),
                       ),
                     ],
                   ),
@@ -117,23 +96,10 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   const Gap(24),
                   Expanded(
                     child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Products for "${widget.categoryName}" will appear here when added.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const Gap(16),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pushNamed(
-                              context,
-                              '/products/productAdd',
-                            ),
-                            child: const Text('Add Product'),
-                          ),
-                        ],
+                      child: Text(
+                        'Products for "${widget.categoryName}" will appear here when added.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
                   ),
@@ -145,8 +111,4 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
       ),
     );
   }
-
-  // Subcategory creation removed to keep a flat category model per requested flow.
 }
-
-// Subcategory card removed — flat category flow implemented.

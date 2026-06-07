@@ -21,10 +21,10 @@ class ProductCard extends StatelessWidget {
       if (first.startsWith('data:')) {
         try {
           final data = base64Decode(first.split(',').last);
-          return Image.memory(data, fit: BoxFit.cover);
+          return Image.memory(data, fit: BoxFit.contain);
         } catch (_) {}
       } else {
-        return Image.network(first, fit: BoxFit.cover);
+        return Image.network(first, fit: BoxFit.contain);
       }
     }
     return const Icon(Icons.image, size: 64, color: Colors.grey);
@@ -37,12 +37,13 @@ class ProductCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Image area
             Container(
@@ -53,25 +54,28 @@ class ProductCard extends StatelessWidget {
                 color: Colors.grey.shade100,
               ),
               clipBehavior: Clip.hardEdge,
-              child: _buildImage(),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _buildImage(),
+              ),
             ),
-            const Gap(8),
+            const Gap(6),
             Text(
               product.productName,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const Gap(4),
             Text(
               product.shortNote,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
-            const Gap(6),
+            const Gap(4),
             const Text('Category: ', style: TextStyle(fontSize: 12)),
-            const Gap(6),
+            const Gap(4),
             if (product.categoryId.isEmpty) ...[
               const Text('Not assigned',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
@@ -103,35 +107,27 @@ class ProductCard extends StatelessWidget {
               ),
             ],
             const Gap(6),
-            Row(
-              children: [
-                if (product.isHot)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'HOT',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
+            Row(children: [
+              if (product.isHot)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                const Spacer(),
-                Text(
-                  'Variants: ${product.variants.length}',
-                  style: const TextStyle(fontSize: 12),
+                  child: const Text('HOT',
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11)),
                 ),
-              ],
-            ),
-            const Gap(8),
+              const Spacer(),
+              Text('Variants: ${product.variants.length}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                  )),
+            ]),
             // Rating (single double value)
             Row(
               children: [
@@ -144,9 +140,6 @@ class ProductCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Spacer(),
-                // small note or placeholder for future
-                const SizedBox.shrink(),
               ],
             ),
           ],

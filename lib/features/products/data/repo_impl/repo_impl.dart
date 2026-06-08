@@ -48,6 +48,26 @@ class ProductRepoImpl implements ProductsRepo {
   }
 
   @override
+  Stream<List<ProductModel>> searchProducts(String query) {
+    final raw = query.trim().toLowerCase();
+  
+    final normalized =
+        raw.replaceAll(RegExp(r'[^a-z0-9\s]'), '').replaceAll(' ', '');
+    if (normalized.isEmpty) return getProducts();
+
+    return firestore
+        .collection('products')
+        .where('searchKeywords', arrayContains: normalized)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+          .toList();
+    });
+  }
+
+  @override
   Future<void> addProductWithImages({
     required ProductModel product,
     required List<Uint8List> imageBytes,

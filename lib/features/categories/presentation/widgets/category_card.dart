@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 
 class CategoryCardLayout extends StatelessWidget {
   final String categoryId;
@@ -58,34 +59,9 @@ class CategoryCardLayout extends StatelessWidget {
                                 fit: BoxFit.cover,
                               )
                             : imageUrl.isNotEmpty
-                                ? Image.network(
-                                    imageUrl,
+                                ? CustomCachedNetworkImage(
+                                    imageUrl: imageUrl,
                                     fit: BoxFit.cover,
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) {
-                                        return child;
-                                      }
-
-                                      return const Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      debugPrint(
-                                        'Image load error: $error',
-                                      );
-
-                                      return const Center(
-                                        child: Icon(
-                                          Icons.broken_image_outlined,
-                                          size: 40,
-                                          color: Colors.grey,
-                                        ),
-                                      );
-                                    },
                                   )
                                 : const Center(
                                     child: Icon(

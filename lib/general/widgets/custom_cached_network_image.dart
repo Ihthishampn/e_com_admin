@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../utils/themes/app_colors.dart';
-
 class CustomCachedNetworkImage extends StatelessWidget {
   const CustomCachedNetworkImage({
     super.key,
@@ -32,8 +30,12 @@ class CustomCachedNetworkImage extends StatelessWidget {
           image: DecorationImage(image: imageProvider, fit: fit),
         ),
       ),
-      placeholder: (context, url) => Center(
-        child: Container(color: AppColors.lightBlack.withOpacity(.5)),
+      placeholder: (context, url) => const Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       ),
       errorWidget: (context, url, error) => const Center(
         child: Icon(Icons.image_not_supported_outlined, size: 25),
@@ -41,4 +43,3 @@ class CustomCachedNetworkImage extends StatelessWidget {
     );
   }
 }
-

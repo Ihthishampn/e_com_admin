@@ -18,6 +18,10 @@ class ProductsUseCase {
     return productsRepo.getProductsByCategory(categoryId);
   }
 
+  Stream<List<ProductModel>> fetchProductsByQuery(String query) {
+    return productsRepo.searchProducts(query);
+  }
+
   Future<void> addProductWithImages({
     required ProductModel product,
     required List<Uint8List> imageBytes,

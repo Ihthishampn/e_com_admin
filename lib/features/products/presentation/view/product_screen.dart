@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gap/gap.dart';
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'dart:async';
 import 'package:e_com_admin/features/categories/data/model/category_model.dart';
 
 import '../../data/model/product_model.dart';
@@ -20,6 +21,9 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   String? _selectedCategoryId; // null means show all
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +53,6 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                       Row(
                         children: const [
-                          HeaderButton(text: "Unit Settings"),
-                          Gap(12),
                           HeaderButton(text: "Add New Product"),
                         ],
                       ),
@@ -104,6 +106,16 @@ class _ProductScreenState extends State<ProductScreen> {
                   SizedBox(
                     width: 400,
                     child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) {
+                        _debounce?.cancel();
+                        _debounce =
+                            Timer(const Duration(milliseconds: 450), () {
+                          setState(() {
+                            _searchQuery = v.trim();
+                          });
+                        });
+                      },
                       decoration: InputDecoration(
                         hintText: 'Search products...',
                         prefixIcon: const Icon(Icons.search),
@@ -130,10 +142,12 @@ class _ProductScreenState extends State<ProductScreen> {
                   /// Product Grid
                   Expanded(
                     child: StreamBuilder<List<ProductModel>>(
-                      stream: _selectedCategoryId == null
-                          ? provider.handleProductFetch()
-                          : provider
-                              .handleProductsByCategory(_selectedCategoryId!),
+                      stream: _searchQuery.isNotEmpty
+                          ? provider.handleProductSearch(_searchQuery)
+                          : (_selectedCategoryId == null
+                              ? provider.handleProductFetch()
+                              : provider.handleProductsByCategory(
+                                  _selectedCategoryId!)),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -188,5 +202,12 @@ class _ProductScreenState extends State<ProductScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 }

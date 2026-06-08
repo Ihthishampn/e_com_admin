@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 import 'package:e_com_admin/features/categories/data/model/category_model.dart';
 
 class ProductCard extends StatelessWidget {
@@ -24,7 +25,7 @@ class ProductCard extends StatelessWidget {
           return Image.memory(data, fit: BoxFit.contain);
         } catch (_) {}
       } else {
-        return Image.network(first, fit: BoxFit.contain);
+        return CustomCachedNetworkImage(imageUrl: first, fit: BoxFit.contain);
       }
     }
     return const Icon(Icons.image, size: 64, color: Colors.grey);

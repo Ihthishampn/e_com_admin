@@ -22,6 +22,10 @@ class ProductProvider extends ChangeNotifier {
     return productsUseCase.fetchProductsByCategory(categoryId);
   }
 
+  Stream<List<ProductModel>> handleProductSearch(String query) {
+    return productsUseCase.fetchProductsByQuery(query);
+  }
+
   Future<bool> handleAddProductWithImages({
     required ProductModel product,
     required List<Uint8List> imageBytes,

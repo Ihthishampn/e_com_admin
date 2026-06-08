@@ -1,6 +1,10 @@
 import 'package:e_com_admin/general/widgets/admin_header.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:provider/provider.dart';
+import 'package:e_com_admin/features/products/presentation/provider/product_provider.dart';
+import 'package:e_com_admin/features/products/data/model/product_model.dart';
+import 'package:e_com_admin/features/products/presentation/widgets/widgets_of_product_screen/product_card.dart';
 
 // category model and local store not required for flat view
 
@@ -95,12 +99,48 @@ class _CategoryProductsScreenState extends State<CategoryProductsScreen> {
                   ),
                   const Gap(24),
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        'Products for "${widget.categoryName}" will appear here when added.',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16),
-                      ),
+                    child: StreamBuilder<List<ProductModel>>(
+                      stream: context
+                          .read<ProductProvider>()
+                          .handleProductsByCategory(widget.categoryId),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(child: Text(snapshot.error.toString()));
+                        }
+
+                        final products = snapshot.data ?? [];
+
+                        if (products.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No products found for "${widget.categoryName}"',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          );
+                        }
+
+                        return GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          itemCount: products.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            mainAxisExtent: 320,
+                          ),
+                          itemBuilder: (context, index) {
+                            return ProductCard(product: products[index]);
+                          },
+                        );
+                      },
                     ),
                   ),
                 ],

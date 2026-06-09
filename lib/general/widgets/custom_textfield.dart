@@ -107,7 +107,6 @@ class CustomTextField extends StatelessWidget {
             ),
           ),
         TextFormField(
-          
           validator: validator,
           focusNode: focusNode,
           inputFormatters: inputFormatters,
@@ -119,7 +118,11 @@ class CustomTextField extends StatelessWidget {
           cursorColor: AppColors.black,
           controller: controller,
           readOnly: readOnly,
+          // Preserve a visible max length counter when provided, but do not
+          // enforce it by preventing additional input. This lets users type
+          // freely while still showing the configured hint of a desired max.
           maxLength: maxLength,
+          maxLengthEnforcement: MaxLengthEnforcement.none,
           onTap: onTap,
           onFieldSubmitted: onFieldSubmitted,
           onChanged: onChanged,
@@ -277,4 +280,3 @@ class CustomDropdown extends StatelessWidget {
     );
   }
 }
-

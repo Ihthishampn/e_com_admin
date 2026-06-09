@@ -15,9 +15,9 @@ class UserDetailsScreen extends StatefulWidget {
 }
 
 class _UserDetailsScreenState extends State<UserDetailsScreen> {
-  int _selectedTabIndex = 0; // 0 for Orders, 1 for Refund & Return
+  int _selectedTabIndex = 0; 
 
-  // --- Static UI Mock Data ---
+  // Static UI Mock Data  
   final Map<String, String> _mockUser = {
     'id': 'USR-89421',
     'initial': 'JD',
@@ -108,7 +108,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
             const Gap(16),
             ElevatedButton(
               onPressed: () {
-                // Back navigation mockup
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0061D1),

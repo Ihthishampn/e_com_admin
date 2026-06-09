@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:e_com_admin/general/utils/themes/app_colors.dart';
 
 class PDBadge extends StatelessWidget {
   final String label;

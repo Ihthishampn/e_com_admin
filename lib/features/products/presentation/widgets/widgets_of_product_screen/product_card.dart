@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'dart:developer';
 import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 import 'package:e_com_admin/features/categories/data/model/category_model.dart';
 
@@ -12,9 +13,9 @@ class ProductCard extends StatelessWidget {
   final ProductModel product;
 
   const ProductCard({
-    Key? key,
+    super.key,
     required this.product,
-  }) : super(key: key);
+  });
 
   Widget _buildImage() {
     if (product.images.isNotEmpty) {
@@ -46,7 +47,6 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Image area
             Container(
               height: 120,
               width: double.infinity,
@@ -87,6 +87,18 @@ class ProductCard extends StatelessWidget {
                   stream:
                       context.read<CategoryProvider>().handleCategoryFetch(),
                   builder: (context, snap) {
+                    if (snap.hasError) {
+                      // ignore: avoid_print
+                      print('ProductCard category stream error: ${snap.error}');
+                      log('ProductCard category stream error',
+                          error: snap.error);
+                      return const Text('Uncategorized',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis);
+                    }
+
                     final cats = snap.data ?? [];
                     final cat = cats.firstWhere(
                       (c) => c.id == product.categoryId,

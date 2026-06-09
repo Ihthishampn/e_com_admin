@@ -6,9 +6,11 @@ import 'package:e_com_admin/general/widgets/custom_cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
+import 'package:e_com_admin/features/products/presentation/provider/product_provider.dart';
+// import 'package:toastification/toastification.dart'; // not used here
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
+import 'dart:developer';
 import 'package:e_com_admin/features/categories/data/model/category_model.dart';
 import 'package:e_com_admin/general/utils/themes/app_colors.dart';
 import 'package:e_com_admin/features/products/presentation/widgets/widgets_of_product_detail/action_chip.dart';
@@ -118,13 +120,35 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   ],
                                 ),
                               );
+
                               if (confirmed == true) {
-                                toastification.show(
-                                  title: const Text('Deleted'),
-                                  description: const Text('Product deleted'),
-                                  backgroundColor: AppColors.buttonRed,
-                                );
-                                Navigator.pop(context);
+                                final id = p.id ?? '';
+                                // debug: log id being deleted
+                                // ignore: avoid_print
+                                print('Attempting to delete product id: $id');
+                                final success = await context
+                                    .read<ProductProvider>()
+                                    .handleDeleteProduct(id);
+
+                                if (success) {
+                                  Navigator.pop(context);
+                                } else {
+                                  // ignore: avoid_print
+                                  print('Product deletion failed for id: $id');
+                                  showDialog<void>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Delete failed'),
+                                      content: const Text(
+                                          'Unable to delete the product. Check console for details.'),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('OK'))
+                                      ],
+                                    ),
+                                  );
+                                }
                               }
                             },
                           ),
@@ -142,9 +166,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                     ],
                   ),
-
                   const Gap(20),
-
                   Container(
                     height: 260,
                     decoration: _cardDeco(),
@@ -197,9 +219,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ],
                     ),
                   ),
-
                   const Gap(20),
-
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -269,6 +289,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                           .read<CategoryProvider>()
                                           .handleCategoryFetch(),
                                       builder: (context, snap) {
+                                        if (snap.hasError) {
+                                          // ignore: avoid_print
+                                          print(
+                                              'Product details category stream error: ${snap.error}');
+                                          log('Product details category stream error',
+                                              error: snap.error);
+                                          return const Text('Uncategorized',
+                                              style: TextStyle(
+                                                  color: AppColors.lightBlack,
+                                                  fontWeight: FontWeight.w600));
+                                        }
+
                                         final cats = snap.data ?? [];
                                         final cat = cats.firstWhere(
                                           (c) => c.id == p.categoryId,
@@ -312,9 +344,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           ],
                         ),
                       ),
-
                       const SizedBox(width: 16),
-
                       Expanded(
                         flex: 1,
                         child: Column(
@@ -335,9 +365,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                     ],
                   ),
-
                   const Gap(24),
-  
                   PDSectionHeader(label: 'Variants', count: p.variants.length),
                   const Gap(10),
                   if (p.variants.isEmpty)
@@ -386,9 +414,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ))
                           .toList(),
                     ),
-
                   const Gap(24),
-
                   PDSectionHeader(label: 'Details', count: p.details.length),
                   const Gap(10),
                   if (p.details.isEmpty)
@@ -419,7 +445,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ))
                           .toList(),
                     ),
-
                   const Gap(40),
                 ],
               ),
@@ -430,4 +455,3 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 }
-

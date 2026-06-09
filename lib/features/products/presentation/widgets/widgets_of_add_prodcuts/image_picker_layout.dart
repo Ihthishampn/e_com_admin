@@ -2,21 +2,24 @@ import 'dart:typed_data';
 import 'package:e_com_admin/general/services/image_service.dart';
 import 'package:e_com_admin/general/widgets/add_image_containers.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class ImagePickerLayout extends StatelessWidget {
   final List<Uint8List> selectedImages;
+  final List<String> existingImageUrls;
   final Function(List<Uint8List>) onImagesSelected;
   final Function(Uint8List) onImageRemoved;
+  final Function(String) onRemoteImageRemoved;
 
   const ImagePickerLayout({
-    Key? key,
+    super.key,
     required this.selectedImages,
+    required this.existingImageUrls,
     required this.onImagesSelected,
     required this.onImageRemoved,
-  }) : super(key: key);
+    required this.onRemoteImageRemoved,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +37,7 @@ class ImagePickerLayout extends StatelessWidget {
               maxImages: 5,
             );
             res.fold((l) => null, (list) {
-              onImagesSelected([...selectedImages, ...list]);
+              onImagesSelected(list);
             });
           },
           child: SizedBox(
@@ -48,6 +51,35 @@ class ImagePickerLayout extends StatelessWidget {
             ),
           ),
         ),
+        for (var url in existingImageUrls)
+          Stack(
+            children: [
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(url,
+                      width: 120, height: 120, fit: BoxFit.cover),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: InkWell(
+                  onTap: () => onRemoteImageRemoved(url),
+                  child: Container(
+                    color: Colors.black45,
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         for (var bytes in selectedImages)
           Stack(
             children: [

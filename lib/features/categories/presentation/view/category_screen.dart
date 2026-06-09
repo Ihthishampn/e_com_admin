@@ -61,6 +61,9 @@ class CategoryScreen extends StatelessWidget {
                       }
 
                       if (snapshot.hasError) {
+                        log('Category list stream error: ${snapshot.error}');
+                        log('Category list stream error',
+                            error: snapshot.error);
                         return Center(
                           child: Text(snapshot.error.toString()),
                         );

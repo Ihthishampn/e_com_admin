@@ -21,13 +21,11 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar
           Container(
             width: 250,
             color: Theme.of(context).primaryColor,
             child: Column(
               children: [
-                // Logo
                 Padding(
                   padding: const EdgeInsets.only(top: 40.0, bottom: 20.0),
                   child: Column(
@@ -67,7 +65,6 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
                   ),
                 ),
 
-                // Menu Items
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -84,7 +81,6 @@ class _SideNavigationBarState extends State<SideNavigationBar> {
             ),
           ),
 
-          // Main Content
           Expanded(child: widget.child),
         ],
       ),

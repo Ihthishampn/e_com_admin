@@ -22,6 +22,11 @@ class ProductsUseCase {
     return productsRepo.searchProducts(query);
   }
 
+  Stream<List<ProductModel>> fetchProductsByQueryInCategory(
+      String query, String categoryId) {
+    return productsRepo.searchProductsByCategory(query, categoryId);
+  }
+
   Future<void> addProductWithImages({
     required ProductModel product,
     required List<Uint8List> imageBytes,
@@ -29,6 +34,22 @@ class ProductsUseCase {
     return productsRepo.addProductWithImages(
       product: product,
       imageBytes: imageBytes,
+    );
+  }
+
+  Future<void> deleteProduct(String id) {
+    return productsRepo.deleteProduct(id);
+  }
+
+  Future<void> updateProductWithImages({
+    required ProductModel product,
+    required List<Uint8List> newImageBytes,
+    required List<String> existingImageUrls,
+  }) {
+    return productsRepo.updateProductWithImages(
+      product: product,
+      newImageBytes: newImageBytes,
+      existingImageUrls: existingImageUrls,
     );
   }
 }

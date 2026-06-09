@@ -7,6 +7,7 @@ class DetailsSectionLayout extends StatefulWidget {
   final Function() onAddDetail;
   final Function(int) onDetailRemoved;
   final Function(List<ProductDetail>) onChanged;
+  final List<ProductDetail>? initialDetails;
 
   const DetailsSectionLayout({
     Key? key,
@@ -14,6 +15,7 @@ class DetailsSectionLayout extends StatefulWidget {
     required this.onAddDetail,
     required this.onDetailRemoved,
     required this.onChanged,
+    this.initialDetails,
   }) : super(key: key);
 
   @override
@@ -24,6 +26,8 @@ class _DetailsSectionLayoutState extends State<DetailsSectionLayout> {
   final List<TextEditingController> headingCtrls = [];
   final List<TextEditingController> contentCtrls = [];
 
+  bool _appliedInitial = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +37,15 @@ class _DetailsSectionLayoutState extends State<DetailsSectionLayout> {
   @override
   void didUpdateWidget(covariant DetailsSectionLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.detailCount != widget.detailCount) {
-      _ensureControllers();
+
+    // Only reset the "applied initial" flag when initialDetails were
+    // previously null and now provided. This prevents re-applying initial
+    // values during user edits which would clear typed content.
+    if (oldWidget.initialDetails == null && widget.initialDetails != null) {
+      _appliedInitial = false;
     }
+
+    _ensureControllers();
   }
 
   void _ensureControllers() {
@@ -48,6 +58,21 @@ class _DetailsSectionLayoutState extends State<DetailsSectionLayout> {
       contentCtrls.removeLast().dispose();
     }
     _notifyChanged();
+    if (!_appliedInitial && widget.initialDetails != null) {
+      // Only populate initial details when controllers don't already contain
+      // user-entered text, to avoid clobbering in-progress edits on rebuild.
+      final hasUserText = headingCtrls.any((c) => c.text.trim().isNotEmpty) ||
+          contentCtrls.any((c) => c.text.trim().isNotEmpty);
+      if (!hasUserText) {
+        final list = widget.initialDetails!;
+        for (var i = 0; i < list.length && i < headingCtrls.length; i++) {
+          headingCtrls[i].text = list[i].heading;
+          contentCtrls[i].text = list[i].content;
+        }
+        _appliedInitial = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _notifyChanged());
+      }
+    }
   }
 
   void _notifyChanged() {

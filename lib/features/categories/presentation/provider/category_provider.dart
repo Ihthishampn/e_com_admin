@@ -26,14 +26,18 @@ class CategoryProvider with ChangeNotifier {
       notifyListeners();
       toastification.show(title: const Text('Category added successfully'));
       return true;
-    } catch (e) {
+    } catch (e, st) {
       addCategoryState = AppState.error;
       notifyListeners();
-      log('error from provider file $e');
+
+      log('CategoryProvider.handleAddCategoryWithImage error: $e\n$st');
+      log('CategoryProvider.handleAddCategoryWithImage error',
+          error: e, stackTrace: st);
       toastification.show(title: Text('Failed to add category: $e'));
       return false;
     }
   }
+
 // fetch
   Stream<List<CategoryModel>> handleCategoryFetch() =>
       categoriesUseCase.getchCategoryModel();

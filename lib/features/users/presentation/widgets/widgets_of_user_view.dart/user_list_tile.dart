@@ -1,13 +1,13 @@
 import 'package:e_com_admin/features/order_return/presentation/widgets/info_row.dart';
+import 'package:e_com_admin/features/users/data/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 class UserListTile extends StatelessWidget {
-  final String userId;
+  final UserModel users;
   final VoidCallback onTap;
 
-  const UserListTile({required this.userId, required this.onTap,super.key});
-
+  const UserListTile({required this.users, required this.onTap, super.key});
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -17,33 +17,23 @@ class UserListTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'ID: $userId',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-
-            const Gap(10),
-
             Row(
               children: [
                 const CircleAvatar(radius: 24, child: Text('A')),
-
                 const Gap(16),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const InfoRow(label: 'Name', value: 'John Doe'),
+                      InfoRow(label: 'Name', value: users.name),
                       const Gap(4),
-                      const InfoRow(
+                      InfoRow(
                         label: 'Phone Number',
-                        value: '+91 0000000000',
+                        value: users.number,
                       ),
                     ],
                   ),
                 ),
-
                 const Icon(Icons.chevron_right, color: Colors.grey),
               ],
             ),

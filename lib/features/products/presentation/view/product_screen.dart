@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gap/gap.dart';
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
-import 'dart:async';
+import 'dart:developer';
 import 'package:e_com_admin/features/categories/data/model/category_model.dart';
 
 import '../../data/model/product_model.dart';
@@ -20,14 +20,11 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
-  String? _selectedCategoryId; // null means show all
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
-  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<ProductProvider>();
+    final provider = context.watch<ProductProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
@@ -69,6 +66,15 @@ class _ProductScreenState extends State<ProductScreen> {
                           .read<CategoryProvider>()
                           .handleCategoryFetch(),
                       builder: (context, snap) {
+                        if (snap.hasError) {
+                          // ignore: avoid_print
+                          print('Category chips stream error: ${snap.error}');
+                          log('Category chips stream error', error: snap.error);
+                          return SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(children: []),
+                          );
+                        }
                         final cats = snap.data ?? [];
                         // Build chips: All + dynamic categories
                         return SingleChildScrollView(
@@ -76,20 +82,26 @@ class _ProductScreenState extends State<ProductScreen> {
                           child: Row(
                             children: [
                               GestureDetector(
-                                onTap: () =>
-                                    setState(() => _selectedCategoryId = null),
+                                onTap: () {
+                                  // Clear any active search when selecting All
+                                  _searchController.clear();
+                                  provider.selectCategory(null);
+                                },
                                 child: filter.CategoryFilterChip(
                                   label: 'All',
-                                  selected: _selectedCategoryId == null,
+                                  selected: provider.selectedCategoryId == null,
                                 ),
                               ),
                               ...cats.map((c) {
                                 return GestureDetector(
-                                  onTap: () => setState(
-                                      () => _selectedCategoryId = c.id),
+                                  onTap: () {
+                                    _searchController.clear();
+                                    provider.selectCategory(c.id);
+                                  },
                                   child: filter.CategoryFilterChip(
                                     label: c.name,
-                                    selected: _selectedCategoryId == c.id,
+                                    selected:
+                                        provider.selectedCategoryId == c.id,
                                   ),
                                 );
                               }).toList(),
@@ -108,13 +120,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: (v) {
-                        _debounce?.cancel();
-                        _debounce =
-                            Timer(const Duration(milliseconds: 450), () {
-                          setState(() {
-                            _searchQuery = v.trim();
-                          });
-                        });
+                        provider.updateSearchQuery(v);
                       },
                       decoration: InputDecoration(
                         hintText: 'Search products...',
@@ -142,12 +148,11 @@ class _ProductScreenState extends State<ProductScreen> {
                   /// Product Grid
                   Expanded(
                     child: StreamBuilder<List<ProductModel>>(
-                      stream: _searchQuery.isNotEmpty
-                          ? provider.handleProductSearch(_searchQuery)
-                          : (_selectedCategoryId == null
-                              ? provider.handleProductFetch()
-                              : provider.handleProductsByCategory(
-                                  _selectedCategoryId!)),
+                      initialData: provider.searchQuery.isEmpty &&
+                              provider.selectedCategoryId == null
+                          ? <ProductModel>[]
+                          : null,
+                      stream: provider.productsStream,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -157,6 +162,9 @@ class _ProductScreenState extends State<ProductScreen> {
                         }
 
                         if (snapshot.hasError) {
+                          // ignore: avoid_print
+                          print('Product stream error: ${snapshot.error}');
+                          log('Product stream error', error: snapshot.error);
                           return Center(
                             child: Text(
                               snapshot.error.toString(),
@@ -167,9 +175,16 @@ class _ProductScreenState extends State<ProductScreen> {
                         final products = snapshot.data ?? [];
 
                         if (products.isEmpty) {
-                          return const Center(
+                          final query = provider.searchQuery.trim();
+                          final message = query.isEmpty
+                              ? (provider.selectedCategoryId == null
+                                  ? 'No products added'
+                                  : 'No products found for the selected category')
+                              : 'No product found with your input';
+
+                          return Center(
                             child: Text(
-                              'No products added',
+                              message,
                             ),
                           );
                         }
@@ -206,7 +221,6 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }

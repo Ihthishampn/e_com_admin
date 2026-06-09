@@ -5,10 +5,10 @@ class CategoryFilterChip extends StatelessWidget {
   final bool selected;
 
   const CategoryFilterChip({
-    Key? key,
+    super.key,
     required this.label,
     this.selected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

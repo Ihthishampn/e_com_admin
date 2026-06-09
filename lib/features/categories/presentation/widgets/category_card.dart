@@ -88,34 +88,7 @@ class CategoryCardLayout extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: onDelete,
-              child: Container(
-                height: 32,
-                width: 32,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade400,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-          )
+          // Delete action intentionally removed from category card.
         ],
       ),
     );

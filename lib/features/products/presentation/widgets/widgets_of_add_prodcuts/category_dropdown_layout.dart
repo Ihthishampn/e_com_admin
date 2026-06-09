@@ -7,12 +7,11 @@ class CategoryDropdownLayout extends StatelessWidget {
   final List<DropdownMenuItem<String>> items;
 
   const CategoryDropdownLayout({
-    Key? key,
+    super.key,
     required this.selectedCategoryId,
     required this.onChanged,
     this.items = const [],
-  }) : super(key: key);
-
+  });
   @override
   Widget build(BuildContext context) {
     return Column(

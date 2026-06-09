@@ -5,6 +5,8 @@ import 'package:injectable/injectable.dart';
 import 'package:e_com_admin/features/products/data/repo_impl/repo_impl.dart';
 import 'package:e_com_admin/features/products/data/use_case/product_use_case.dart';
 import 'package:e_com_admin/features/products/domain/products_repo.dart';
+import 'package:e_com_admin/features/products/presentation/provider/add_product_provider.dart';
+import 'package:e_com_admin/features/products/presentation/provider/product_provider.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -19,6 +21,12 @@ Future<void> confirugationDependency() async {
   if (!getIt.isRegistered<ProductsUseCase>()) {
     getIt.registerLazySingleton<ProductsUseCase>(
       () => ProductsUseCase(getIt<ProductsRepo>()),
+    );
+  }
+
+  if (!getIt.isRegistered<AddProductProvider>()) {
+    getIt.registerFactory<AddProductProvider>(
+      () => AddProductProvider(getIt<ProductProvider>()),
     );
   }
 }

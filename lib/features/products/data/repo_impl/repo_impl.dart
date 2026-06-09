@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,7 +23,11 @@ class ProductRepoImpl implements ProductsRepo {
         .collection('products')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
+        .handleError((e, st) {
+ 
+      log('Firestore getProducts snapshot error: $e');
+      log('Firestore getProducts snapshot error', error: e, stackTrace: st);
+    }).map(
       (snapshot) {
         return snapshot.docs
             .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -38,7 +43,11 @@ class ProductRepoImpl implements ProductsRepo {
         .where('categoryId', isEqualTo: categoryId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
+        .handleError((e, st) {
+      log('Firestore getProductsByCategory snapshot error: $e');
+      log('Firestore getProductsByCategory snapshot error',
+          error: e, stackTrace: st);
+    }).map(
       (snapshot) {
         return snapshot.docs
             .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
@@ -50,7 +59,7 @@ class ProductRepoImpl implements ProductsRepo {
   @override
   Stream<List<ProductModel>> searchProducts(String query) {
     final raw = query.trim().toLowerCase();
-  
+
     final normalized =
         raw.replaceAll(RegExp(r'[^a-z0-9\s]'), '').replaceAll(' ', '');
     if (normalized.isEmpty) return getProducts();
@@ -60,7 +69,36 @@ class ProductRepoImpl implements ProductsRepo {
         .where('searchKeywords', arrayContains: normalized)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) {
+        .handleError((e, st) {
+      log('Firestore searchProducts snapshot error: $e');
+      log('Firestore searchProducts snapshot error', error: e, stackTrace: st);
+    }).map((snapshot) {
+      return snapshot.docs
+          .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+          .toList();
+    });
+  }
+
+  @override
+  Stream<List<ProductModel>> searchProductsByCategory(
+      String query, String categoryId) {
+    final raw = query.trim().toLowerCase();
+
+    final normalized =
+        raw.replaceAll(RegExp(r'[^a-z0-9\s]'), '').replaceAll(' ', '');
+    if (normalized.isEmpty) return getProductsByCategory(categoryId);
+
+    return firestore
+        .collection('products')
+        .where('categoryId', isEqualTo: categoryId)
+        .where('searchKeywords', arrayContains: normalized)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .handleError((e, st) {
+      log('Firestore searchProductsByCategory snapshot error: $e');
+      log('Firestore searchProductsByCategory snapshot error',
+          error: e, stackTrace: st);
+    }).map((snapshot) {
       return snapshot.docs
           .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
           .toList();
@@ -98,5 +136,59 @@ class ProductRepoImpl implements ProductsRepo {
     );
 
     await docRef.set(savedProduct.toMap());
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async {
+    try {
+      final docRef = firestore.collection('products').doc(id);
+      await docRef.delete();
+    } catch (e, st) {
+      log('Firestore deleteProduct error: $e');
+      log('Firestore deleteProduct error', error: e, stackTrace: st);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateProductWithImages({
+    required ProductModel product,
+    required List<Uint8List> newImageBytes,
+    required List<String> existingImageUrls,
+  }) async {
+    try {
+      final uploadResults = await Future.wait(
+        newImageBytes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final bytes = entry.value;
+          final path =
+              'ihthisham_stotage_product/${DateTime.now().millisecondsSinceEpoch}_upd_$index.jpg';
+          final ref = storage.ref().child(path);
+          return ref
+              .putData(
+                bytes,
+                SettableMetadata(contentType: 'image/jpeg'),
+              )
+              .then((task) => task.ref.getDownloadURL());
+        }),
+      );
+
+      final mergedImages = [...existingImageUrls, ...uploadResults];
+
+      final docRef = firestore.collection('products').doc(product.id);
+      final savedProduct = product.copyWith(
+        images: mergedImages,
+        searchKeywords: product.searchKeywords.isEmpty
+            ? keywordsBuilder(product.productName)
+            : product.searchKeywords,
+      );
+
+      await docRef.set(savedProduct.toMap());
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('Firestore updateProductWithImages error: $e');
+      log('Firestore updateProductWithImages error', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 }

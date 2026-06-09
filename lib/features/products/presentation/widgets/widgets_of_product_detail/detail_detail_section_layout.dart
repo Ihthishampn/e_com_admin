@@ -7,11 +7,11 @@ class DetailDetailSectionLayout extends StatelessWidget {
   final Function(int) onDetailRemoved;
 
   const DetailDetailSectionLayout({
-    Key? key,
+    super.key,
     required this.detailCount,
     required this.onAddDetail,
     required this.onDetailRemoved,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

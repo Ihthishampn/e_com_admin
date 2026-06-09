@@ -7,11 +7,11 @@ class VariantDetailSectionLayout extends StatelessWidget {
   final Function(int) onVariantRemoved;
 
   const VariantDetailSectionLayout({
-    Key? key,
+    super.key,
     required this.variantCount,
     required this.onAddVariant,
     required this.onVariantRemoved,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +54,11 @@ class VariantDetailItemLayout extends StatelessWidget {
   final Function(int) onRemove;
 
   const VariantDetailItemLayout({
-    Key? key,
+    super.key,
     required this.index,
     required this.variantCount,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

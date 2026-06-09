@@ -6,10 +6,10 @@ class CategoryDropdownDetailLayout extends StatelessWidget {
   final Function(String?) onChanged;
 
   const CategoryDropdownDetailLayout({
-    Key? key,
+    super.key,
     required this.selectedCategoryId,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

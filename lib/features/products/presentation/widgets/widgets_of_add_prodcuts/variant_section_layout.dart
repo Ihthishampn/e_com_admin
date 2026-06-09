@@ -6,13 +6,15 @@ class VariantSectionLayout extends StatefulWidget {
   final int variantCount;
   final Function(int) onVariantRemoved;
   final Function(List<ProductVariant>) onChanged;
+  final List<ProductVariant>? initialVariants;
 
   const VariantSectionLayout({
-    Key? key,
+    super.key,
     required this.variantCount,
     required this.onVariantRemoved,
     required this.onChanged,
-  }) : super(key: key);
+    this.initialVariants,
+  });
 
   @override
   State<VariantSectionLayout> createState() => _VariantSectionLayoutState();
@@ -31,12 +33,18 @@ class _VariantSectionLayoutState extends State<VariantSectionLayout> {
     _ensureControllers();
   }
 
+  bool _appliedInitial = false;
+
   @override
   void didUpdateWidget(covariant VariantSectionLayout oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.variantCount != widget.variantCount) {
-      _ensureControllers();
+
+
+    if (oldWidget.initialVariants == null && widget.initialVariants != null) {
+      _appliedInitial = false;
     }
+
+    _ensureControllers();
   }
 
   void _ensureControllers() {
@@ -55,6 +63,25 @@ class _VariantSectionLayoutState extends State<VariantSectionLayout> {
       stockCtrls.removeLast().dispose();
     }
     _notifyChanged();
+    if (!_appliedInitial && widget.initialVariants != null) {
+      final hasUserText = unitCtrls.any((c) => c.text.trim().isNotEmpty) ||
+          variantCtrls.any((c) => c.text.trim().isNotEmpty) ||
+          mrpCtrls.any((c) => c.text.trim().isNotEmpty) ||
+          sellCtrls.any((c) => c.text.trim().isNotEmpty) ||
+          stockCtrls.any((c) => c.text.trim().isNotEmpty);
+      if (!hasUserText) {
+        final list = widget.initialVariants!;
+        for (var i = 0; i < list.length && i < unitCtrls.length; i++) {
+          unitCtrls[i].text = list[i].unit;
+          variantCtrls[i].text = list[i].variant;
+          mrpCtrls[i].text = list[i].mrp.toString();
+          sellCtrls[i].text = list[i].sellingPrice.toString();
+          stockCtrls[i].text = list[i].stock.toString();
+        }
+        _appliedInitial = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) => _notifyChanged());
+      }
+    }
   }
 
   void _notifyChanged() {

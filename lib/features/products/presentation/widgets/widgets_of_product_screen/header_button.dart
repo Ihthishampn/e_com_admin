@@ -5,9 +5,9 @@ class HeaderButton extends StatelessWidget {
   final String text;
 
   const HeaderButton({
-    Key? key,
+    super.key,
     required this.text,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

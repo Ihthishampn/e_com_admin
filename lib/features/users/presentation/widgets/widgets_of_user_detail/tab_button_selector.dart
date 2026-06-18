@@ -6,10 +6,10 @@ class TabButtonSelector extends StatelessWidget {
   final Function(int) onTabChanged;
 
   const TabButtonSelector({
-    Key? key,
+    super.key,
     required this.selectedTabIndex,
     required this.onTabChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

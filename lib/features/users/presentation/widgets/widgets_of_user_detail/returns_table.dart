@@ -4,9 +4,9 @@ class ReturnsTable extends StatelessWidget {
   final List<List<String>> mockReturns;
 
   const ReturnsTable({
-    Key? key,
+    super.key,
     required this.mockReturns,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

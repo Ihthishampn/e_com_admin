@@ -13,6 +13,7 @@ abstract class ProductsRepo {
     required ProductModel product,
     required List<Uint8List> newImageBytes,
     required List<String> existingImageUrls,
+    required List<String> originalImageUrls,
   });
   Future<void> addProductWithImages({
     required ProductModel product,

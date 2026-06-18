@@ -11,6 +11,10 @@ class UsersUseCase {
     return await repo.fetchUsers();
   }
 
+  Future<UserModel?> fetchUserById(String id) async {
+    return await repo.fetchUserById(id);
+  }
+
   Future<List<UserModel>> searchUser(String query) async {
     return await repo.searchUsers(query);
   }

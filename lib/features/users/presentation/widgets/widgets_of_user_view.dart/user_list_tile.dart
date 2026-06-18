@@ -19,7 +19,8 @@ class UserListTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                const CircleAvatar(radius: 24, child: Text('A')),
+                CircleAvatar(
+                    radius: 24, child: Text(users.name[0].toUpperCase())),
                 const Gap(16),
                 Expanded(
                   child: Column(

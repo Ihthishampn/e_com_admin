@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:e_com_admin/general/utils/themes/app_colors.dart';
 
 class PDActionChip extends StatelessWidget {
   final String label;
@@ -22,9 +21,9 @@ class PDActionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -15,7 +15,7 @@ class InfoRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        Text( 
           '$label:',
           style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
         ),

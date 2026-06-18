@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class StatusChip extends StatelessWidget {
   final String label;
   final bool selected;
+  final ValueChanged<bool>? onSelected;
 
   const StatusChip({
     super.key,
     required this.label,
     this.selected = false,
+    this.onSelected,
   });
 
   @override
@@ -15,7 +17,7 @@ class StatusChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      onSelected: (_) {},
+      onSelected: onSelected,
       selectedColor: const Color(0xFF33221E),
       backgroundColor: Colors.white,
       labelStyle: TextStyle(
@@ -29,3 +31,4 @@ class StatusChip extends StatelessWidget {
     );
   }
 }
+

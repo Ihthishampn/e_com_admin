@@ -45,11 +45,13 @@ class ProductsUseCase {
     required ProductModel product,
     required List<Uint8List> newImageBytes,
     required List<String> existingImageUrls,
+    required List<String> originalImageUrls,
   }) {
     return productsRepo.updateProductWithImages(
       product: product,
       newImageBytes: newImageBytes,
       existingImageUrls: existingImageUrls,
+      originalImageUrls: originalImageUrls,
     );
   }
 }

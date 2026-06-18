@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class OrdersTable extends StatelessWidget {
   final List<List<String>> mockOrders;
 
   const OrdersTable({
-    Key? key,
+    super.key,
     required this.mockOrders,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +21,30 @@ class OrdersTable extends StatelessWidget {
           'Amount',
           'Status'
         ]),
-        ...mockOrders.map((order) => _tableRow(order)),
-        _tableTotalRow('2,590.00'),
+        if (mockOrders.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Text('No orders found'),
+          )
+        else ...[
+          ...mockOrders.map((order) => _tableRow(order)),
+          _tableTotalRow(_computeTotal(mockOrders)),
+        ],
       ],
     );
+  }
+
+  String _computeTotal(List<List<String>> orders) {
+    double total = 0.0;
+    for (final order in orders) {
+      if (order.length > 4) {
+        final raw = order[4].replaceAll(',', '').replaceAll('₹', '').trim();
+        total += double.tryParse(raw) ?? 0.0;
+      }
+    }
+    // Format with currency symbol and two decimals
+    final fmt = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
+    return fmt.format(total);
   }
 
   Widget _tableHeader(List<String> titles) {
@@ -88,7 +109,7 @@ class OrdersTable extends StatelessWidget {
     );
   }
 
-  Widget _tableTotalRow(String total) {
+  Widget _tableTotalRow(String totalWithSymbol) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       color: const Color(0xFFF1F2F2),
@@ -100,7 +121,7 @@ class OrdersTable extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           Text(
-            '₹$total',
+            totalWithSymbol,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
         ],

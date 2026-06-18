@@ -15,7 +15,12 @@ class UserProvider with ChangeNotifier {
     return await useCase.fetchUser();
   }
 
+  Future<UserModel?> fetchUserById(String id) async {
+    return await useCase.fetchUserById(id);
+  }
+
   Future<List<UserModel>> searchUserModel(String query) async {
     return await useCase.searchUser(query);
   }
 }
+

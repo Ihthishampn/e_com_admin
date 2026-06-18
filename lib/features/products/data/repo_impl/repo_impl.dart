@@ -155,8 +155,25 @@ class ProductRepoImpl implements ProductsRepo {
     required ProductModel product,
     required List<Uint8List> newImageBytes,
     required List<String> existingImageUrls,
+    required List<String> originalImageUrls,
   }) async {
     try {
+      // 1. Delete images that the user removed (present in original but not in existing)
+      final removedUrls = originalImageUrls
+          .where((url) => !existingImageUrls.contains(url))
+          .toList();
+
+      await Future.wait(
+        removedUrls.map((url) async {
+          try {
+            await storage.refFromURL(url).delete();
+          } catch (e) {
+            log('Failed to delete removed image from Storage: $url, error: $e');
+          }
+        }),
+      );
+
+      // 2. Upload any new locally-picked images
       final uploadResults = await Future.wait(
         newImageBytes.asMap().entries.map((entry) {
           final index = entry.key;
@@ -173,6 +190,7 @@ class ProductRepoImpl implements ProductsRepo {
         }),
       );
 
+      // 3. Merge kept existing URLs + newly uploaded URLs
       final mergedImages = [...existingImageUrls, ...uploadResults];
 
       final docRef = firestore.collection('products').doc(product.id);

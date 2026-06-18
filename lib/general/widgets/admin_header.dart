@@ -38,16 +38,20 @@ class _AdminHeaderState extends State<AdminHeader> {
       padding: const EdgeInsets.all(24.0),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFCF8F0),
-          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFFBF5), Color(0xFFF7FBFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 18,
               offset: const Offset(0, 8),
             ),
           ],
-          border: Border.all(color: Colors.grey.withOpacity(0.15), width: 1.2),
+          border: Border.all(color: Colors.grey.withOpacity(0.08), width: 1),
         ),
         padding: const EdgeInsets.all(24.0),
         child: LayoutBuilder(

@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart';
 import 'package:e_com_admin/features/products/presentation/provider/product_provider.dart';
 import 'package:e_com_admin/features/users/presentation/provider/user_provider.dart';
+import 'package:e_com_admin/features/order_return/presentation/provider/order_return_provider.dart';
 import 'package:e_com_admin/firebase_options.dart';
 import 'package:e_com_admin/general/core/injection/injection.dart';
 import 'package:e_com_admin/general/services/go_route/route_config.dart';
@@ -27,8 +28,11 @@ void main() async {
     ChangeNotifierProvider(
       create: (context) => ProductProvider(getIt()),
     ),
-      ChangeNotifierProvider(
-      create: (context) =>getIt<UserProvider>(),
+    ChangeNotifierProvider(
+      create: (context) => getIt<UserProvider>(),
+    ),
+    ChangeNotifierProvider(
+      create: (context) => getIt<OrderReturnProvider>(),
     ),
   ], child: const EcomAdminApp()));
 }

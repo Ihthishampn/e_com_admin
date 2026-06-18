@@ -15,28 +15,44 @@ class ProductProvider extends ChangeNotifier {
   bool isLoading = false;
   String? selectedCategoryId;
   String searchQuery = '';
-  // internal debounce for search updates coming from UI
   Timer? _debounce;
+  final StreamController<List<ProductModel>> _productsController =
+      StreamController<List<ProductModel>>.broadcast();
+  List<ProductModel> _cachedProducts = [];
+  StreamSubscription<List<ProductModel>>? _backendSub;
 
-  /// Returns the active product stream depending on selected category and query
-  Stream<List<ProductModel>> get productsStream {
-    final query = searchQuery.trim();
-    if (query.isNotEmpty) {
-      if (selectedCategoryId == null) {
-        return productsUseCase.fetchProductsByQuery(query);
-      }
-      return productsUseCase.fetchProductsByQueryInCategory(
-          query, selectedCategoryId!);
-    }
-
-    if (selectedCategoryId == null) return productsUseCase.fetchProducts();
-    return productsUseCase.fetchProductsByCategory(selectedCategoryId!);
+  ProductProvider(this.productsUseCase) {
+    _startBaseSubscription();
   }
 
-  ProductProvider(this.productsUseCase);
+  void _startBaseSubscription() {
+    _backendSub?.cancel();
+    _backendSub = productsUseCase.fetchProducts().listen((list) {
+      _cachedProducts = list;
+      _emitFiltered();
+    }, onError: (e) {
+      _productsController.add([]);
+    });
+  }
+
+  void _emitFiltered() {
+    final query = searchQuery.trim();
+    if (query.isNotEmpty) return;
+
+    final filtered = selectedCategoryId == null
+        ? _cachedProducts
+        : _cachedProducts
+            .where((p) => p.categoryId == selectedCategoryId)
+            .toList();
+
+    _productsController.add(filtered);
+  }
+
+  Stream<List<ProductModel>> get productsStream => _productsController.stream;
 
   Stream<List<ProductModel>> handleProductFetch() {
-    return productsUseCase.fetchProducts();
+    _startBaseSubscription();
+    return productsStream;
   }
 
   Stream<List<ProductModel>> handleProductsByCategory(String categoryId) {
@@ -57,13 +73,28 @@ class ProductProvider extends ChangeNotifier {
     selectedCategoryId = categoryId;
     searchQuery = '';
     notifyListeners();
+    _emitFiltered();
   }
 
   void updateSearchQuery(String query,
       {Duration debounce = const Duration(milliseconds: 450)}) {
     _debounce?.cancel();
     _debounce = Timer(debounce, () {
-      searchQuery = query.trim();
+      final newQuery = query.trim();
+      if (newQuery.isEmpty) {
+        searchQuery = '';
+        _startBaseSubscription();
+        notifyListeners();
+        return;
+      }
+
+      searchQuery = newQuery;
+      _backendSub?.cancel();
+      productsUseCase.fetchProductsByQuery(newQuery).listen((list) {
+        _productsController.add(list);
+      }, onError: (e) {
+        _productsController.add([]);
+      });
       notifyListeners();
     });
   }
@@ -89,8 +120,7 @@ class ProductProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       log('ProductProvider.handleAddProductWithImages error: $e\n');
-      log('ProductProvider.handleAddProductWithImages error',
-          error: e);
+      log('ProductProvider.handleAddProductWithImages error', error: e);
 
       toastification.show(
         title: const Text('Error'),
@@ -117,8 +147,7 @@ class ProductProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       log('ProductProvider.handleDeleteProduct error: $e');
-      log('ProductProvider.handleDeleteProduct error',
-          error: e);
+      log('ProductProvider.handleDeleteProduct error', error: e);
       toastification.show(
         title: const Text('Error'),
         description: Text('Unable to delete product. ${e.toString()}'),
@@ -135,6 +164,7 @@ class ProductProvider extends ChangeNotifier {
     required ProductModel product,
     required List<Uint8List> newImageBytes,
     required List<String> existingImageUrls,
+    required List<String> originalImageUrls,
   }) async {
     isLoading = true;
     notifyListeners();
@@ -143,6 +173,7 @@ class ProductProvider extends ChangeNotifier {
         product: product,
         newImageBytes: newImageBytes,
         existingImageUrls: existingImageUrls,
+        originalImageUrls: originalImageUrls,
       );
       toastification.show(
         title: const Text('Updated'),
@@ -152,8 +183,7 @@ class ProductProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       log('ProductProvider.handleUpdateProductWithImages error: $e');
-      log('ProductProvider.handleUpdateProductWithImages error',
-          error: e);
+      log('ProductProvider.handleUpdateProductWithImages error', error: e);
       toastification.show(
         title: const Text('Error'),
         description: Text('Unable to update product. ${e.toString()}'),

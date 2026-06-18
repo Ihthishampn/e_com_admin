@@ -75,14 +75,13 @@ class _UsersViewState extends State<UsersView> {
         children: [
           const AdminHeader(),
           const Gap(12),
-    
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Users (${filteredUsers.length})',
+                  'Users',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -97,7 +96,6 @@ class _UsersViewState extends State<UsersView> {
                     decoration: InputDecoration(
                       hintText: 'search here',
                       prefixIcon: const Icon(Icons.search),
-                 
                       suffixIcon: _isSearching
                           ? const SizedBox(
                               width: 24,
@@ -130,7 +128,6 @@ class _UsersViewState extends State<UsersView> {
             ),
           ),
           const Gap(12),
-      
           Expanded(
             child: FutureBuilder<List<UserModel>>(
               future: _currentFuture,

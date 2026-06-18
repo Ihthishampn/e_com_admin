@@ -18,6 +18,14 @@ import 'package:e_com_admin/features/categories/domain/repo/categories_repo.dart
     as _i722;
 import 'package:e_com_admin/features/categories/presentation/provider/category_provider.dart'
     as _i329;
+import 'package:e_com_admin/features/order_return/data/repo_impl/order_return_repo_impl.dart'
+    as _i18;
+import 'package:e_com_admin/features/order_return/data/use_case/order_return_use_case.dart'
+    as _i856;
+import 'package:e_com_admin/features/order_return/domain/repository/order_return_repository.dart'
+    as _i323;
+import 'package:e_com_admin/features/order_return/presentation/provider/order_return_provider.dart'
+    as _i1024;
 import 'package:e_com_admin/features/products/data/repo_impl/repo_impl.dart'
     as _i494;
 import 'package:e_com_admin/features/products/data/use_case/product_use_case.dart'
@@ -59,12 +67,18 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i25.CategoriesUseCase(gh<_i722.CategoriesRepo>()));
     gh.factory<_i329.CategoryProvider>(
         () => _i329.CategoryProvider(gh<_i25.CategoriesUseCase>()));
+    gh.lazySingleton<_i323.OrderReturnRepository>(
+        () => _i18.OrderReturnRepoImpl(gh<_i974.FirebaseFirestore>()));
     gh.lazySingleton<_i480.UserRepository>(
         () => _i73.UserRepoImpl(gh<_i974.FirebaseFirestore>()));
     gh.lazySingleton<_i128.ProductsRepo>(
         () => _i494.ProductRepoImpl(gh<_i974.FirebaseFirestore>()));
+    gh.lazySingleton<_i856.OrderReturnUseCase>(
+        () => _i856.OrderReturnUseCase(gh<_i323.OrderReturnRepository>()));
     gh.lazySingleton<_i743.UsersUseCase>(
         () => _i743.UsersUseCase(gh<_i480.UserRepository>()));
+    gh.factory<_i1024.OrderReturnProvider>(
+        () => _i1024.OrderReturnProvider(gh<_i856.OrderReturnUseCase>()));
     gh.lazySingleton<_i673.ProductsUseCase>(
         () => _i673.ProductsUseCase(gh<_i128.ProductsRepo>()));
     gh.factory<_i135.UserProvider>(

@@ -8,12 +8,12 @@ class UserInfoCard extends StatelessWidget {
   final String phoneNumber;
 
   const UserInfoCard({
-    Key? key,
+    super.key,
     required this.userId,
     required this.initial,
     required this.displayName,
     required this.phoneNumber,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

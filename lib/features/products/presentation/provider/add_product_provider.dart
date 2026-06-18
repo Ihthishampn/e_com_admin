@@ -16,6 +16,7 @@ class AddProductProvider extends ChangeNotifier {
       TextEditingController();
 
   List<String> existingImageUrls = [];
+  List<String> originalImageUrls = [];
   List<Uint8List> selectedImages = [];
 
   String? selectedCategoryId;
@@ -115,6 +116,7 @@ class AddProductProvider extends ChangeNotifier {
         selectedCategoryId =
             prod.categoryId.isNotEmpty ? prod.categoryId : null;
         existingImageUrls = List<String>.from(prod.images);
+        originalImageUrls = List<String>.from(prod.images);
         variants = List<ProductVariant>.from(prod.variants);
         details = List<ProductDetail>.from(prod.details);
         variantCount = variants.isNotEmpty ? variants.length : 1;

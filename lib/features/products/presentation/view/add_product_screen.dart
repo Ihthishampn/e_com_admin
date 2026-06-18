@@ -308,7 +308,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                               return;
                             }
 
-                            // validate variants/details collected from the child widgets
                             bool areVariantsValid(List variants) {
                               if (variants.isEmpty) return false;
                               for (var i = 0; i < variants.length; i++) {
@@ -381,6 +380,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 product: edited,
                                 newImageBytes: addProv.selectedImages,
                                 existingImageUrls: addProv.existingImageUrls,
+                                originalImageUrls: addProv.originalImageUrls,
                               );
                             } else {
                               success =
